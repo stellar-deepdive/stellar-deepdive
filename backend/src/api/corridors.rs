@@ -315,7 +315,8 @@ pub async fn get_corridor_detail(
         ));
     }
 
-    let latest = metrics.first().unwrap();
+    // Safe: the is_empty() check above guarantees at least one element.
+    let latest = metrics.first().expect("metrics is non-empty");
     let health_score = calculate_health_score(
         latest.success_rate,
         latest.total_transactions,
