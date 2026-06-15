@@ -6,6 +6,8 @@ members = [
   "stellar_deepdive",
   "analytics",
   "governance",
+  "access-control",
+  "secure-contract",
 ]
 
 # Clippy linting configuration for all contracts

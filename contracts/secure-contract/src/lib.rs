@@ -1,12 +1,15 @@
 #![no_std]
 use soroban_sdk::{
-    contract, contracterror, contractimpl, panic_with_error, symbol_short, Address, Env, Symbol,
+    contract, contractclient, contracterror, contractimpl, panic_with_error, symbol_short,
+    Address, Env, Symbol,
 };
 
-mod acl {
-    soroban_sdk::contractimport!(
-        file = "../access-control/target/wasm32-unknown-unknown/release/access_control.wasm"
-    );
+/// Interface implemented by the access-control contract this contract delegates
+/// permission checks to. Defined as a trait (rather than `contractimport!`) so
+/// `SecureContract` can be built and tested without a prebuilt access-control wasm.
+#[contractclient(name = "AccessControlClient")]
+pub trait AccessControlInterface {
+    fn check_permission(env: Env, user: Address, function: Symbol) -> bool;
 }
 
 /// Errors returned by `SecureContract`.
@@ -49,10 +52,77 @@ impl SecureContract {
             None => panic_with_error!(env, ContractError::NotInitialized),
         };
 
-        let acl_client = acl::Client::new(env, &acl_addr);
+        let acl_client = AccessControlClient::new(env, &acl_addr);
 
         if !acl_client.check_permission(user, &function) {
             panic_with_error!(env, ContractError::AccessDenied);
         }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use soroban_sdk::{testutils::Address as _, Env};
+
+    /// Minimal stand-in for the access-control contract: grants permission for
+    /// whichever function symbol it is constructed to allow.
+    #[contract]
+    struct MockAcl;
+
+    #[contractimpl]
+    impl MockAcl {
+        pub fn check_permission(_env: Env, _user: Address, function: Symbol) -> bool {
+            function == symbol_short!("protected")
+        }
+    }
+
+    fn setup(env: &Env) -> (SecureContractClient<'_>, Address, Address) {
+        let acl_id = env.register_contract(None, MockAcl);
+        let secure_id = env.register_contract(None, SecureContract);
+        let client = SecureContractClient::new(env, &secure_id);
+        (client, acl_id, secure_id)
+    }
+
+    #[test]
+    fn test_protected_function_with_permission() {
+        let env = Env::default();
+        let (client, acl_id, _) = setup(&env);
+
+        let admin = Address::generate(&env);
+        let caller = Address::generate(&env);
+
+        env.mock_all_auths();
+        client.initialize(&admin, &acl_id);
+
+        assert_eq!(client.protected_function(&caller), 42);
+    }
+
+    #[test]
+    fn test_admin_only_without_permission_returns_access_denied() {
+        let env = Env::default();
+        let (client, acl_id, _) = setup(&env);
+
+        let admin = Address::generate(&env);
+        let caller = Address::generate(&env);
+
+        env.mock_all_auths();
+        client.initialize(&admin, &acl_id);
+
+        // MockAcl only grants "protected", so "admin" must be denied.
+        let result = client.try_admin_only(&caller);
+        assert_eq!(result, Err(Ok(ContractError::AccessDenied)));
+    }
+
+    #[test]
+    fn test_call_before_initialize_returns_not_initialized() {
+        let env = Env::default();
+        let (client, _acl_id, _) = setup(&env);
+
+        let caller = Address::generate(&env);
+        env.mock_all_auths();
+
+        let result = client.try_protected_function(&caller);
+        assert_eq!(result, Err(Ok(ContractError::NotInitialized)));
     }
 }
