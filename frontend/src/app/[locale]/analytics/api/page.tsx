@@ -3,8 +3,15 @@
 import React, { useEffect, useState } from "react";
 import { RefreshCw, Activity, ChevronLeft } from "lucide-react";
 import { Link } from "@/i18n/navigation";
+import dynamic from "next/dynamic";
 import { fetchApiUsageOverview, ApiUsageOverview } from "@/lib/analytics-api";
-import { ApiUsageDashboard } from "@/components/analytics/ApiUsageDashboard";
+import { ChartSkeleton } from "@/components/charts/ChartSkeleton";
+
+// Code-split recharts: load the dashboard chart chunk on demand.
+const ApiUsageDashboard = dynamic(
+  () => import("@/components/analytics/ApiUsageDashboard").then((m) => m.ApiUsageDashboard),
+  { ssr: false, loading: () => <ChartSkeleton height={500} /> },
+);
 
 export default function ApiAnalyticsPage() {
     const [data, setData] = useState<ApiUsageOverview | null>(null);

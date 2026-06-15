@@ -2,9 +2,16 @@
 
 import React, { useState, useEffect } from "react";
 import { Waves, Droplets, ArrowRight, Activity, Zap } from "lucide-react";
+import dynamic from "next/dynamic";
 import { MetricCard } from "@/components/dashboard/MetricCard";
-import { LiquidityChart } from "@/components/charts/LiquidityChart";
+import { ChartSkeleton } from "@/components/charts/ChartSkeleton";
 import { LiquidityHeatmap } from "@/components/charts/LiquidityHeatmap";
+
+// Code-split recharts: load the chart chunk on demand.
+const LiquidityChart = dynamic(
+  () => import("@/components/charts/LiquidityChart").then((m) => m.LiquidityChart),
+  { ssr: false, loading: () => <ChartSkeleton /> },
+);
 import { Badge } from "@/components/ui/badge";
 
 export default function LiquidityPage() {

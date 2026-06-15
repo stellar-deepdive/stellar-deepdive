@@ -14,7 +14,14 @@ import {
   ChevronDown,
 } from "lucide-react";
 import { MetricCard } from "@/components/dashboard/MetricCard";
-import { PoolPerformanceChart } from "@/components/charts/PoolPerformanceChart";
+import dynamic from "next/dynamic";
+import { ChartSkeleton } from "@/components/charts/ChartSkeleton";
+
+// Code-split recharts: load the chart chunk on demand.
+const PoolPerformanceChart = dynamic(
+  () => import("@/components/charts/PoolPerformanceChart").then((m) => m.PoolPerformanceChart),
+  { ssr: false, loading: () => <ChartSkeleton /> },
+);
 import { Badge } from "@/components/ui/badge";
 import {
   LiquidityPool,

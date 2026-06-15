@@ -22,13 +22,30 @@ import {
   CorridorDetailData,
   CorridorMetrics,
 } from "@/lib/api";
-import {
-  SuccessRateChart,
-  LatencyDistributionChart,
-  LiquidityTrendChart,
-  VolumeTrendChart,
-  SlippageTrendChart,
-} from "@/components/corridor-charts";
+import dynamic from "next/dynamic";
+import { ChartSkeleton } from "@/components/charts/ChartSkeleton";
+
+// Code-split recharts: these charts share one async chunk, loaded on demand.
+const SuccessRateChart = dynamic(
+  () => import("@/components/corridor-charts").then((m) => m.SuccessRateChart),
+  { ssr: false, loading: () => <ChartSkeleton /> },
+);
+const LatencyDistributionChart = dynamic(
+  () => import("@/components/corridor-charts").then((m) => m.LatencyDistributionChart),
+  { ssr: false, loading: () => <ChartSkeleton /> },
+);
+const LiquidityTrendChart = dynamic(
+  () => import("@/components/corridor-charts").then((m) => m.LiquidityTrendChart),
+  { ssr: false, loading: () => <ChartSkeleton /> },
+);
+const VolumeTrendChart = dynamic(
+  () => import("@/components/corridor-charts").then((m) => m.VolumeTrendChart),
+  { ssr: false, loading: () => <ChartSkeleton /> },
+);
+const SlippageTrendChart = dynamic(
+  () => import("@/components/corridor-charts").then((m) => m.SlippageTrendChart),
+  { ssr: false, loading: () => <ChartSkeleton /> },
+);
 import { MainLayout } from "@/components/layout";
 import { WebSocketStatus } from "@/components/WebSocketStatus";
 import { useRealtimeCorridors } from "@/hooks/useRealtimeCorridors";

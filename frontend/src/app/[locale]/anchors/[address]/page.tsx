@@ -4,9 +4,16 @@ import React, { useEffect, useState, use, Suspense } from "react";
 import { getAnchorDetail, AnchorDetailData } from "@/lib/api";
 import { getAddressValidationError } from "@/lib/address";
 import { AnchorHeader } from "@/components/anchors/AnchorHeader";
+import dynamic from "next/dynamic";
 import { AssetPortfolio } from "@/components/anchors/AssetPortfolio";
-import { ReliabilityTrend } from "@/components/charts/ReliabilityTrend";
+import { ChartSkeleton } from "@/components/charts/ChartSkeleton";
 import { AlertCircle, Clock, ArrowLeft, XCircle } from "lucide-react";
+
+// Code-split recharts: load the chart chunk on demand.
+const ReliabilityTrend = dynamic(
+  () => import("@/components/charts/ReliabilityTrend").then((m) => m.ReliabilityTrend),
+  { ssr: false, loading: () => <ChartSkeleton /> },
+);
 import { Link } from "@/i18n/navigation";
 
 function AnchorDetailPageContent({

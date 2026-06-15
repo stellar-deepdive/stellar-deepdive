@@ -1,11 +1,18 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import dynamic from "next/dynamic";
 import { IssuedAsset } from "@/lib/api";
 import { IssuedAssetsTable } from "./IssuedAssetsTable";
-import { AssetDistributionChart } from "./AssetDistributionChart";
+import { ChartSkeleton } from "@/components/charts/ChartSkeleton";
 import { AssetDetailModal } from "./AssetDetailModal";
 import { Download, Filter, ArrowUpDown } from "lucide-react";
+
+// Code-split recharts: load the distribution chart chunk on demand.
+const AssetDistributionChart = dynamic(
+  () => import("./AssetDistributionChart").then((m) => m.AssetDistributionChart),
+  { ssr: false, loading: () => <ChartSkeleton height={400} /> },
+);
 
 interface AssetPortfolioProps {
   assets: IssuedAsset[];
