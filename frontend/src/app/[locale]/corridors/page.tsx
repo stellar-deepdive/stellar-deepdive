@@ -191,6 +191,7 @@ function CorridorsPageContent() {
             placeholder="Search Intelligence Database..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
+            data-search-input
             className="w-full bg-slate-900/50 border border-border/50 rounded-xl pl-11 pr-4 py-3 text-sm font-mono tracking-tight focus:outline-none focus:ring-2 focus:ring-accent/50 group-hover:border-accent/30 transition-all"
           />
         </div>
