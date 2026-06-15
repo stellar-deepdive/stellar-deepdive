@@ -435,20 +435,27 @@ pub struct VolumeTrend {
     pub data_points: usize,
 }
 
-// Tests commented out - require mock database implementation
-// TODO: Add Database::new_mock() or use a test database
-/*
 #[cfg(test)]
 mod tests {
     use super::*;
+    use sqlx::sqlite::SqlitePoolOptions;
 
-    #[test]
-    #[ignore = "Requires Database::new_mock implementation"]
-    fn test_truncate_to_hour() {
-        let service = AggregationService::new(
-            Arc::new(Database::new_mock()),
-            AggregationConfig::default(),
-        );
+    /// Build an `AggregationService` backed by an in-memory SQLite pool.
+    ///
+    /// The methods under test (`truncate_to_hour`, `compute_volume_trends`) never touch
+    /// `self.db`, so an unmigrated in-memory pool is sufficient as a stand-in `Database`.
+    async fn test_service() -> AggregationService {
+        let pool = SqlitePoolOptions::new()
+            .connect("sqlite::memory:")
+            .await
+            .expect("failed to create in-memory sqlite pool");
+
+        AggregationService::new(Arc::new(Database::new(pool)), AggregationConfig::default())
+    }
+
+    #[tokio::test]
+    async fn test_truncate_to_hour() {
+        let service = test_service().await;
 
         let dt = Utc::now();
         let truncated = service.truncate_to_hour(dt);
@@ -458,12 +465,9 @@ mod tests {
         assert_eq!(truncated.nanosecond(), 0);
     }
 
-    #[test]
-    fn test_compute_volume_trends() {
-        let service = AggregationService::new(
-            Arc::new(Database::new_mock()),
-            AggregationConfig::default(),
-        );
+    #[tokio::test]
+    async fn test_compute_volume_trends() {
+        let service = test_service().await;
 
         let now = Utc::now();
         let metrics = vec![
@@ -510,4 +514,3 @@ mod tests {
         assert_eq!(trends[0].data_points, 2);
     }
 }
-*/
