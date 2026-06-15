@@ -400,6 +400,73 @@ mod tests {
     }
 
     #[test]
+    fn test_compute_slippage_bps_basic() {
+        let order_book = OrderBookSnapshot {
+            bids: vec![OrderBookEntry {
+                price: 99.0,
+                amount_usd: 150.0,
+            }],
+            asks: vec![OrderBookEntry {
+                price: 101.0,
+                amount_usd: 200.0,
+            }],
+        };
+
+        // mid price = 100.0, spread = 2.0 -> 2.0 / 100.0 * 10_000 = 200 bps
+        let slippage = compute_slippage_bps(&order_book);
+        assert!((slippage - 200.0).abs() < 1e-9);
+    }
+
+    #[test]
+    fn test_compute_slippage_bps_tight_spread() {
+        let order_book = OrderBookSnapshot {
+            bids: vec![OrderBookEntry {
+                price: 99.99,
+                amount_usd: 100.0,
+            }],
+            asks: vec![OrderBookEntry {
+                price: 100.01,
+                amount_usd: 100.0,
+            }],
+        };
+
+        // mid price = 100.0, spread = 0.02 -> 0.02 / 100.0 * 10_000 = 2 bps
+        let slippage = compute_slippage_bps(&order_book);
+        assert!((slippage - 2.0).abs() < 1e-9);
+    }
+
+    #[test]
+    fn test_compute_slippage_bps_empty_book() {
+        let order_book = OrderBookSnapshot {
+            bids: vec![],
+            asks: vec![],
+        };
+
+        assert_eq!(compute_slippage_bps(&order_book), 0.0);
+    }
+
+    #[test]
+    fn test_compute_slippage_bps_one_sided_book() {
+        let bids_only = OrderBookSnapshot {
+            bids: vec![OrderBookEntry {
+                price: 99.0,
+                amount_usd: 100.0,
+            }],
+            asks: vec![],
+        };
+        assert_eq!(compute_slippage_bps(&bids_only), 0.0);
+
+        let asks_only = OrderBookSnapshot {
+            bids: vec![],
+            asks: vec![OrderBookEntry {
+                price: 101.0,
+                amount_usd: 100.0,
+            }],
+        };
+        assert_eq!(compute_slippage_bps(&asks_only), 0.0);
+    }
+
+    #[test]
     fn test_compute_corridor_metrics_empty() {
         let metrics = compute_corridor_metrics(&[], None, 1.0);
         assert_eq!(metrics.total_transactions, 0);
