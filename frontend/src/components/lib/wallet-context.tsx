@@ -11,10 +11,18 @@ declare global {
     stellar?: {
       requestPublicKey: () => Promise<string>
     }
-    freighter?: any
-    albedo?: any
-    xBullSDK?: any
-    rabet?: any
+    freighter?: {
+      getPublicKey: () => Promise<string>
+    }
+    albedo?: {
+      publicKey: (options: Record<string, unknown>) => Promise<{ pubkey: string }>
+    }
+    xBullSDK?: {
+      connect: () => Promise<string>
+    }
+    rabet?: {
+      connect: () => Promise<{ publicKey: string }>
+    }
   }
 }
 

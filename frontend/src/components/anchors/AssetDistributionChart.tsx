@@ -25,10 +25,10 @@ const COLORS = [
   "#14b8a6", // Teal 500
 ];
 
-const CustomTooltip = (props: any) => {
+const CustomTooltip = (props: TooltipProps<number, string>) => {
   const { active, payload } = props;
   if (active && payload && payload.length) {
-    const data = payload[0].payload;
+    const data = payload[0].payload as IssuedAsset & { percent: number; fill: string };
     return (
       <div className="bg-slate-900 border border-slate-700 p-3 rounded-lg shadow-xl">
         <div className="flex items-center gap-2 mb-1">

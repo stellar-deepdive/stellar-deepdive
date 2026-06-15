@@ -19,7 +19,7 @@ interface ReliabilityTrendProps {
 
 type TimeWindow = "7d" | "30d" | "90d";
 
-const CustomTooltip = (props: any) => {
+const CustomTooltip = (props: TooltipProps<number, string>) => {
   const { active, payload, label } = props;
   if (active && payload && payload.length) {
     return (

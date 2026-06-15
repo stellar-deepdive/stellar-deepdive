@@ -189,7 +189,7 @@ export function VolumeTrendChart({ data }: VolumeTrendChartProps) {
           />
           <YAxis
             label={{ value: "Volume ($)", angle: -90, position: "insideLeft" }}
-            tickFormatter={(value: any) => {
+            tickFormatter={(value: number | string) => {
               const n = Number(value || 0);
               return `$${(n / 1000).toFixed(0)}k`;
             }}

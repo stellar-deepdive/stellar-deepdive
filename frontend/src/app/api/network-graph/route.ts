@@ -17,6 +17,26 @@ interface Corridor {
     liquidity_depth_usd: number;
 }
 
+interface GraphNode {
+    id: string;
+    name: string;
+    type: 'anchor' | 'asset';
+    val: number;
+    address?: string;
+    status?: string;
+    fullName?: string;
+    issuer?: string;
+}
+
+interface GraphLink {
+    source: string;
+    target: string;
+    type: 'issuance' | 'corridor';
+    value: number;
+    health?: number;
+    liquidity?: number;
+}
+
 export async function GET() {
     try {
         // 1. Fetch Anchors and Corridors in parallel
@@ -34,10 +54,10 @@ export async function GET() {
         const anchors: Anchor[] = anchorsData.anchors || [];
 
         // 2. Transform into Nodes and Links
-        const nodes: any[] = [];
-        const links: any[] = [];
-        const assetNodesMap = new Map<string, any>();
-        const anchorNodesMap = new Map<string, any>();
+        const nodes: GraphNode[] = [];
+        const links: GraphLink[] = [];
+        const assetNodesMap = new Map<string, GraphNode>();
+        const anchorNodesMap = new Map<string, GraphNode>();
 
         // Add Anchor nodes
         anchors.forEach(anchor => {

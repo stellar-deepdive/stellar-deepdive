@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 
 export interface WsMessage {
   type: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export interface UseWebSocketOptions {
