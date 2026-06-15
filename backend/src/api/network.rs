@@ -6,7 +6,20 @@ use axum::{
     Router,
 };
 use serde::{Deserialize, Serialize};
-use tracing::{info, warn};
+use std::sync::{OnceLock, RwLock};
+use tracing::info;
+
+/// Process-wide active network configuration.
+///
+/// Defaults to the network configured via `STELLAR_NETWORK` at startup, but
+/// can be switched at runtime via `POST /api/network/switch`. Note that
+/// long-lived clients (Stellar RPC/Horizon connections) created at startup
+/// are not reconfigured by this switch; only the network metadata returned
+/// by this API reflects the change until the server is restarted.
+fn active_network() -> &'static RwLock<NetworkConfig> {
+    static ACTIVE_NETWORK: OnceLock<RwLock<NetworkConfig>> = OnceLock::new();
+    ACTIVE_NETWORK.get_or_init(|| RwLock::new(NetworkConfig::from_env()))
+}
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct NetworkInfo {
@@ -34,7 +47,10 @@ pub struct SwitchNetworkResponse {
 
 /// Get current network information
 pub async fn get_network_info() -> Result<Json<NetworkInfo>, StatusCode> {
-    let network_config = NetworkConfig::from_env();
+    let network_config = active_network()
+        .read()
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?
+        .clone();
 
     let network_info = NetworkInfo {
         network: network_config.network,
@@ -74,24 +90,31 @@ pub async fn get_available_networks() -> Json<Vec<NetworkInfo>> {
     Json(network_infos)
 }
 
-/// Switch network (Note: This is a placeholder - actual switching would require server restart)
+/// Switch the active network used by `/api/network/info` and `/api/network/available`.
+///
+/// This updates the process-wide active network configuration immediately, so
+/// API consumers polling `/api/network/info` see the change without a restart.
+/// Long-lived Stellar RPC/Horizon clients created at startup are not
+/// reconfigured by this endpoint and continue using the network they were
+/// started with until the server is restarted.
 pub async fn switch_network(
     Json(request): Json<SwitchNetworkRequest>,
 ) -> Result<Json<SwitchNetworkResponse>, StatusCode> {
     info!("Network switch requested to: {}", request.network);
 
-    // In a real implementation, you might want to:
-    // 1. Update environment variables
-    // 2. Restart services with new network configuration
-    // 3. Clear network-specific caches
-
-    // For now, we'll return information about what the switch would do
     let target_config = NetworkConfig::for_network(request.network);
 
+    {
+        let mut active = active_network()
+            .write()
+            .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+        *active = target_config.clone();
+    }
+
     let response = SwitchNetworkResponse {
-        success: false, // Set to false since we're not actually switching
+        success: true,
         message: format!(
-            "Network switch to {} requested. Server restart required to apply changes.",
+            "Active network switched to {}. RPC/Horizon clients initialized at startup retain their original configuration until the server is restarted.",
             target_config.display_name()
         ),
         network_info: NetworkInfo {
@@ -106,10 +129,7 @@ pub async fn switch_network(
         },
     };
 
-    warn!(
-        "Network switch to {} requires server restart - not implemented in this endpoint",
-        request.network
-    );
+    info!("Active network switched to {}", request.network);
 
     Ok(Json(response))
 }
