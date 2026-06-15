@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import dynamic from "next/dynamic";
 import {
   TrendingUp,
   Activity,
@@ -10,11 +11,24 @@ import {
 } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { fetchAnalyticsMetrics, AnalyticsMetrics } from "@/lib/analytics-api";
-import { LiquidityChart } from "@/components/charts/LiquidityChart";
-import { TVLChart } from "@/components/charts/TVLChart";
-import { SettlementLatencyChart } from "@/components/charts/SettlementLatencyChart";
+import { ChartSkeleton } from "@/components/charts/ChartSkeleton";
 import { TopCorridors } from "@/components/charts/TopCorridors";
 import { LiquidityHeatmap } from "@/components/charts/LiquidityHeatmap";
+
+// Code-split the recharts-backed charts so the library loads on demand
+// instead of in the analytics route's initial bundle.
+const LiquidityChart = dynamic(
+  () => import("@/components/charts/LiquidityChart").then((m) => m.LiquidityChart),
+  { ssr: false, loading: () => <ChartSkeleton /> },
+);
+const TVLChart = dynamic(
+  () => import("@/components/charts/TVLChart").then((m) => m.TVLChart),
+  { ssr: false, loading: () => <ChartSkeleton /> },
+);
+const SettlementLatencyChart = dynamic(
+  () => import("@/components/charts/SettlementLatencyChart").then((m) => m.SettlementLatencyChart),
+  { ssr: false, loading: () => <ChartSkeleton /> },
+);
 import { MetricCard } from "@/components/dashboard/MetricCard";
 import { Badge } from "@/components/ui/badge";
 import { MuxedAccountCard } from "@/components/analytics/MuxedAccountCard";

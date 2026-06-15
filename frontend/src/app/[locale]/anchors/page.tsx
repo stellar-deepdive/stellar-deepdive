@@ -4,7 +4,13 @@ import { useState, useEffect, useMemo, Suspense } from "react";
 import { Search, Anchor as AnchorIcon, ExternalLink, BarChart3, ChevronUp, ChevronDown, ChevronsUpDown, CheckCircle, AlertCircle, Activity, TrendingUp, TrendingDown } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { useRouter } from "@/i18n/navigation";
-import { ResponsiveContainer, LineChart, Line } from "recharts";
+import dynamic from "next/dynamic";
+
+// Code-split recharts: the sparkline chunk loads on demand.
+const Sparkline = dynamic(
+  () => import("@/components/charts/Sparkline").then((m) => m.Sparkline),
+  { ssr: false },
+);
 import { MainLayout } from "@/components/layout";
 import { AnchorMetrics, fetchAnchors } from "@/lib/api";
 import { usePagination } from "@/hooks/usePagination";
@@ -391,23 +397,16 @@ const AnchorsPageContent = () => {
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="w-20 h-8">
-                              <ResponsiveContainer width="100%" height="100%">
-                                <LineChart data={historicalData.slice(-7)}>
-                                  <Line
-                                    type="monotone"
-                                    dataKey="score"
-                                    stroke={
-                                      anchor.reliability_score >= 95
-                                        ? "#10b981"
-                                        : anchor.reliability_score >= 85
-                                          ? "#f59e0b"
-                                          : "#ef4444"
-                                    }
-                                    strokeWidth={2}
-                                    dot={false}
-                                  />
-                                </LineChart>
-                              </ResponsiveContainer>
+                              <Sparkline
+                                data={historicalData.slice(-7)}
+                                color={
+                                  anchor.reliability_score >= 95
+                                    ? "#10b981"
+                                    : anchor.reliability_score >= 85
+                                      ? "#f59e0b"
+                                      : "#ef4444"
+                                }
+                              />
                             </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -524,23 +523,16 @@ const AnchorsPageContent = () => {
                             30-day trend
                           </span>
                           <div className="w-16 h-6">
-                            <ResponsiveContainer width="100%" height="100%">
-                              <LineChart data={historicalData.slice(-7)}>
-                                <Line
-                                  type="monotone"
-                                  dataKey="score"
-                                  stroke={
-                                    anchor.reliability_score >= 95
-                                      ? "#10b981"
-                                      : anchor.reliability_score >= 85
-                                        ? "#f59e0b"
-                                        : "#ef4444"
-                                  }
-                                  strokeWidth={2}
-                                  dot={false}
-                                />
-                              </LineChart>
-                            </ResponsiveContainer>
+                            <Sparkline
+                              data={historicalData.slice(-7)}
+                              color={
+                                anchor.reliability_score >= 95
+                                  ? "#10b981"
+                                  : anchor.reliability_score >= 85
+                                    ? "#f59e0b"
+                                    : "#ef4444"
+                              }
+                            />
                           </div>
                         </div>
                         <Link

@@ -19,11 +19,22 @@ import {
     CorridorDetailData,
     generateMockCorridorData
 } from "@/lib/api";
-import {
-    SuccessRateCompareChart,
-    VolumeCompareChart,
-    SlippageCompareChart
-} from "@/components/corridors/CorridorCompareCharts";
+import dynamic from "next/dynamic";
+import { ChartSkeleton } from "@/components/charts/ChartSkeleton";
+
+// Code-split recharts: these charts share one async chunk, loaded on demand.
+const SuccessRateCompareChart = dynamic(
+    () => import("@/components/corridors/CorridorCompareCharts").then((m) => m.SuccessRateCompareChart),
+    { ssr: false, loading: () => <ChartSkeleton /> },
+);
+const VolumeCompareChart = dynamic(
+    () => import("@/components/corridors/CorridorCompareCharts").then((m) => m.VolumeCompareChart),
+    { ssr: false, loading: () => <ChartSkeleton /> },
+);
+const SlippageCompareChart = dynamic(
+    () => import("@/components/corridors/CorridorCompareCharts").then((m) => m.SlippageCompareChart),
+    { ssr: false, loading: () => <ChartSkeleton /> },
+);
 import {
     CorridorCompareCards,
     BestTimeToTransact

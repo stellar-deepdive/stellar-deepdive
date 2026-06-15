@@ -10,7 +10,14 @@ import {
   ChevronRight,
   BadgeCheck,
 } from "lucide-react";
-import { TrustlineGrowthChart } from "@/components/charts/TrustlineGrowthChart";
+import dynamic from "next/dynamic";
+import { ChartSkeleton } from "@/components/charts/ChartSkeleton";
+
+// Code-split recharts: load the chart chunk on demand.
+const TrustlineGrowthChart = dynamic(
+  () => import("@/components/charts/TrustlineGrowthChart").then((m) => m.TrustlineGrowthChart),
+  { ssr: false, loading: () => <ChartSkeleton /> },
+);
 import {
   TrustlineStat,
   TrustlineSnapshot,

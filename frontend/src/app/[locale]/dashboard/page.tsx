@@ -2,11 +2,21 @@
 
 import React, { useEffect, useState, useCallback } from "react";
 import { useTranslations, useLocale } from "next-intl";
+import dynamic from "next/dynamic";
 import { MetricCard } from "@/components/dashboard/MetricCard";
 import { CorridorHealth } from "@/components/dashboard/CorridorHealth";
-import { LiquidityChart } from "@/components/dashboard/LiquidityChart";
+import { ChartSkeleton } from "@/components/charts/ChartSkeleton";
 import { TopAssetsTable } from "@/components/dashboard/TopAssetsTable";
-import { SettlementSpeedChart } from "@/components/dashboard/SettlementSpeedChart";
+
+// Code-split recharts: load the dashboard chart chunks on demand.
+const LiquidityChart = dynamic(
+  () => import("@/components/dashboard/LiquidityChart").then((m) => m.LiquidityChart),
+  { ssr: false, loading: () => <ChartSkeleton /> },
+);
+const SettlementSpeedChart = dynamic(
+  () => import("@/components/dashboard/SettlementSpeedChart").then((m) => m.SettlementSpeedChart),
+  { ssr: false, loading: () => <ChartSkeleton /> },
+);
 import { WebSocketStatus } from "@/components/WebSocketStatus";
 import { DataRefreshIndicator } from "@/components/DataRefreshIndicator";
 import { useRealtimeCorridors } from "@/hooks/useRealtimeCorridors";
